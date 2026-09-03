@@ -4,6 +4,7 @@
   "private": true,
   "author": "Tao Jiang",
   "description": "WebMCP-enabled tax intake prototype where a user's AI fills a live form through structured tools.",
+  "homepage": "https://github.com/taoj007/slip2form",
   "keywords": [
     "webmcp",
     "nextjs",
@@ -13,6 +14,10 @@
     "tax-intake"
   ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taoj007/slip2form.git"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

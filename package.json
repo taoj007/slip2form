@@ -3,8 +3,8 @@
   "version": "0.1.0",
   "private": true,
   "author": "Tao Jiang",
-  "description": "WebMCP-enabled tax intake prototype where a user's AI fills a live form through structured tools.",
-  "homepage": "https://github.com/taoj007/slip2form",
+  "description": "WebMCP-enabled tax form intake demo where a user's AI fills a live form through structured tools.",
+  "homepage": "https://slip2form.vercel.app/",
   "keywords": [
     "webmcp",
     "nextjs",

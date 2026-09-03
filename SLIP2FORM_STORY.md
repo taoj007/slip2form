@@ -6,7 +6,7 @@ Slip2Form is not an AI tax product. It is an interaction model for the web:
 
 > The user brings their own AI, and the website exposes safe, structured actions that AI can use.
 
-This prototype uses a tax intake form to demonstrate that idea.
+This prototype uses a tax form intake flow to demonstrate that idea.
 
 ## Inspiration
 
@@ -22,7 +22,7 @@ Using WebMCP, Slip2Form turns a tax form into something an AI assistant can inte
 
 ## What It Does
 
-Slip2Form is an agent-ready online tax intake form.
+Slip2Form is an agent-ready online tax form experience.
 
 A user can give a tax slip to their own AI assistant and ask it to fill the current page using only clearly supported information. The AI discovers the WebMCP tools exposed by Slip2Form and uses them to update the live form directly.
 

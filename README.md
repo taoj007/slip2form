@@ -1,5 +1,7 @@
 # Slip2Form
 
+Let your AI fill the tax form.
+
 Slip2Form is a WebMCP-enabled tax intake prototype. It demonstrates a simple pattern:
 
 - the user brings their own AI assistant
@@ -59,6 +61,7 @@ Open `http://localhost:3000`.
 ## Testing instructions
 
 No login is required.
+Live site: https://slip2form.vercel.app/
 
 To verify the project the way a judge would:
 
@@ -83,6 +86,7 @@ Use the WebMCP tools on this page to fill the Slip2Form intake with values that 
 - The project is intended to stay public and unchanged after the submission deadline through the end of judging.
 - The repository contains the WebMCP tool registration code and the full demo app required to run it.
 - Public repository: https://github.com/taoj007/slip2form
+- Live site: https://slip2form.vercel.app/
 
 ## Project story
 

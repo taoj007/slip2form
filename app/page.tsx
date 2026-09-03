@@ -305,6 +305,11 @@ const toastDismissMs = 4500;
 const toastFadeDurationMs = 250;
 const slip2FormSessionStorageKey = "slip2form-session-state";
 const agentPassIdleMs = 1600;
+const ignoredAgentTextValues = new Set([
+  "example_string",
+  "example text",
+  "string",
+]);
 
 const formatCurrency = (amount: number) =>
   new Intl.NumberFormat("en-CA", {
@@ -320,7 +325,11 @@ const sanitizeAgentText = (value: unknown) => {
   }
 
   const normalized = value.trim();
-  return normalized ? normalized : null;
+  if (!normalized) {
+    return null;
+  }
+
+  return ignoredAgentTextValues.has(normalized.toLowerCase()) ? null : normalized;
 };
 
 const getAgentUpdateDetails = (
@@ -522,9 +531,7 @@ const getFieldValidationMessage = (
   const value = fieldState.currentValue;
 
   if (value === null) {
-    return isFieldRequired(field, fieldStates)
-      ? "This required field is missing."
-      : null;
+    return null;
   }
 
   if (field.kind === "select") {
@@ -1470,6 +1477,12 @@ export default function Home() {
       isFieldRequired(field, taxFields) &&
       taxFields[field.id].currentValue === null,
   ).length;
+  const hasFormActivity =
+    activityLog.length > 0 ||
+    aiAssistState.isWorking ||
+    aiAssistState.currentPassTouched > 0 ||
+    aiAssistState.lastPassTouched > 0 ||
+    fieldDefinitions.some((field) => taxFields[field.id].latestSource !== null);
   const validationMessages = fieldDefinitions.reduce((messages, field) => {
     const message = getFieldValidationMessage(field, taxFields[field.id], taxFields);
 
@@ -1509,22 +1522,29 @@ export default function Home() {
     .filter(([, fields]) => fields.length > 0);
   const canConfirmSubmission =
     missingRequiredCount === 0 && invalidFieldCount === 0 && reviewCount === 0;
+  const hasAiPassActivity =
+    aiAssistState.isWorking ||
+    aiAssistState.currentPassTouched > 0 ||
+    aiAssistState.lastPassTouched > 0 ||
+    reviewCount > 0;
+  const hasAiAttentionState =
+    Boolean(aiAssistState.lastError) ||
+    reviewCount > 0 ||
+    (hasAiPassActivity && invalidFieldCount > 0);
   const aiStatusTone =
     aiAssistState.availability === "unavailable"
       ? "border-stone-300 bg-stone-100 text-stone-700"
       : aiAssistState.isWorking
         ? "border-sky-200 bg-sky-50 text-sky-900"
-        : aiAssistState.lastError
+        : hasAiAttentionState
           ? "border-amber-300 bg-amber-50 text-amber-900"
-          : reviewCount > 0 || invalidFieldCount > 0
-            ? "border-amber-300 bg-amber-50 text-amber-900"
-            : "border-emerald-200 bg-emerald-50 text-emerald-900";
+          : "border-emerald-200 bg-emerald-50 text-emerald-900";
   const aiStatusEyebrow =
     aiAssistState.availability === "unavailable"
       ? "WebMCP status"
       : aiAssistState.isWorking
         ? "Live AI pass"
-        : aiAssistState.lastError || reviewCount > 0 || invalidFieldCount > 0
+        : hasAiAttentionState
           ? "Needs attention"
           : "AI ready";
   const aiStatusTitle =
@@ -1534,8 +1554,10 @@ export default function Home() {
         ? "AI is updating the form"
         : aiAssistState.lastError
           ? "AI needs attention"
-          : reviewCount > 0 || invalidFieldCount > 0
+          : reviewCount > 0
             ? "AI completed a pass and needs review"
+            : hasAiPassActivity && invalidFieldCount > 0
+              ? "AI completed a pass and some fields need correction"
             : aiAssistState.lastPassTouched > 0
               ? "AI completed its last pass"
               : "Form is ready for AI-assisted filling";
@@ -1546,11 +1568,13 @@ export default function Home() {
         ? `${aiAssistState.currentPassChanged} field${aiAssistState.currentPassChanged === 1 ? "" : "s"} changed in this pass.${aiAssistState.currentPassNeedsConfirmation > 0 ? ` ${aiAssistState.currentPassNeedsConfirmation} need confirmation.` : ""}`
         : aiAssistState.lastError
           ? aiAssistState.lastError
-          : reviewCount > 0 || invalidFieldCount > 0
+          : reviewCount > 0 || (hasAiPassActivity && invalidFieldCount > 0)
             ? `${reviewCount} pending AI review, ${needsConfirmationCount} need confirmation, and ${invalidFieldCount} field${invalidFieldCount === 1 ? "" : "s"} need correction.`
             : aiAssistState.lastPassTouched > 0
               ? `Last pass touched ${aiAssistState.lastPassTouched} field${aiAssistState.lastPassTouched === 1 ? "" : "s"} and changed ${aiAssistState.lastPassChanged}.${aiAssistState.lastPassNeedsConfirmation > 0 ? ` ${aiAssistState.lastPassNeedsConfirmation} need confirmation.` : ""}`
-              : "WebMCP tools are registered and ready to fill this intake.";
+              : missingRequiredCount > 0
+                ? `WebMCP tools are registered and ready to fill this intake. ${missingRequiredCount} required field${missingRequiredCount === 1 ? "" : "s"} start blank.`
+                : "WebMCP tools are registered and ready to fill this intake.";
 
   return (
     <main className="min-h-screen px-6 py-10">
@@ -1563,8 +1587,8 @@ export default function Home() {
 	                alt="Slip2Form"
 	                className="h-auto w-full max-w-[13rem]"
 	              />
-	              <h1 className="mt-4 max-w-[16ch] text-2xl font-semibold leading-[1.15] tracking-[-0.025em] text-stone-950 sm:text-[2rem]">
-	                Let your AI fill the form.
+	              <h1 className="mt-4 max-w-[18ch] text-2xl font-semibold leading-[1.15] tracking-[-0.025em] text-stone-950 sm:text-[2rem]">
+	                Let your AI fill the tax form.
 	              </h1>
 	              <p className="mt-5 border-l-4 border-emerald-800 bg-[#fbfaf6] px-4 py-3 text-sm font-semibold leading-6 text-stone-800">
 	                {quickInstruction}
@@ -1674,7 +1698,8 @@ export default function Home() {
                 : "Focus mode shows pending AI review, required missing, and invalid fields only."}
             </p>
           </div>
-          {reviewCount > 0 || missingRequiredCount > 0 || invalidFieldCount > 0 ? (
+          {reviewCount > 0 ||
+          (hasFormActivity && (missingRequiredCount > 0 || invalidFieldCount > 0)) ? (
             <div className="mt-4 border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-950">
               <p className="font-semibold">Resolve flagged items before final submission.</p>
               <p className="mt-1 text-xs leading-5 text-amber-900">
@@ -2022,6 +2047,9 @@ export default function Home() {
                 {fieldDefinitions.map((field) => {
                   const fieldState = taxFields[field.id];
                   const validationMessage = validationMessages[field.id];
+                  const isRequiredMissing =
+                    isFieldRequired(field, taxFields) &&
+                    fieldState.currentValue === null;
                   const hasAgentContext =
                     fieldState.agentReason ||
                     fieldState.agentSourceSnippet ||
@@ -2056,8 +2084,10 @@ export default function Home() {
                         className={`text-xs font-semibold md:justify-self-end md:text-right ${
                           validationMessage
                             ? "text-rose-700"
+                            : isRequiredMissing
+                              ? "text-amber-700"
                             : fieldState.pendingAgentReview
-                            ? "text-amber-700"
+                              ? "text-amber-700"
                             : fieldState.acceptedAgentChange ||
                                 fieldState.latestSource === "human"
                               ? "text-emerald-800"
@@ -2066,8 +2096,17 @@ export default function Home() {
                       >
                         {validationMessage
                           ? "Needs correction"
+                          : isRequiredMissing
+                            ? "Required missing"
                           : getFieldStatusLabel(fieldState)}
                       </dd>
+                      {isRequiredMissing ? (
+                        <div className="md:col-span-3">
+                          <div className="mt-1 border border-amber-200 bg-amber-50 px-3 py-3 text-xs leading-5 text-amber-900">
+                            This required field is missing.
+                          </div>
+                        </div>
+                      ) : null}
                       {validationMessage ? (
                         <div className="md:col-span-3">
                           <div className="mt-1 border border-rose-200 bg-rose-50 px-3 py-3 text-xs leading-5 text-rose-900">
@@ -2101,27 +2140,29 @@ export default function Home() {
               </dl>
             </div>
 
-            <div className="mt-6 shrink-0 flex justify-end gap-3 border-t border-stone-300 pt-4">
+            <div className="mt-6 shrink-0 border-t border-stone-300 pt-4">
               {!canConfirmSubmission ? (
-                <p className="mr-auto self-center text-xs font-medium text-stone-500">
-                  Resolve AI review items, required fields, and validation errors to confirm.
+                <p className="text-xs font-medium text-stone-500">
+                  Review pending AI items and complete required fields before confirming.
                 </p>
               ) : null}
-              <button
-                type="button"
-                onClick={closePreview}
-                className="border border-stone-400 bg-white px-4 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100"
-              >
-                Back to form
-              </button>
-              <button
-                type="button"
-                onClick={confirmSubmission}
-                disabled={!canConfirmSubmission}
-                className="border border-emerald-900 bg-emerald-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:border-stone-300 disabled:bg-stone-200 disabled:text-stone-500"
-              >
-                Confirm to Submit
-              </button>
+              <div className="mt-3 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={closePreview}
+                  className="min-w-28 border border-stone-400 bg-white px-4 py-2 text-sm font-semibold text-stone-800 transition-colors hover:bg-stone-100"
+                >
+                  Back
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmSubmission}
+                  disabled={!canConfirmSubmission}
+                  className="min-w-28 border border-emerald-900 bg-emerald-900 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-emerald-800 disabled:cursor-not-allowed disabled:border-stone-300 disabled:bg-stone-200 disabled:text-stone-500"
+                >
+                  Confirm
+                </button>
+              </div>
             </div>
           </section>
         </div>

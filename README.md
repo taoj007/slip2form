@@ -62,6 +62,7 @@ Open `http://localhost:3000`.
 
 No login is required.
 Live site: https://slip2form.vercel.app/
+Demo video: https://youtu.be/Le5opnVVnOI
 
 To verify the project the way a judge would:
 
@@ -87,6 +88,7 @@ Use the WebMCP tools on this page to fill the Slip2Form intake with values that 
 - The repository contains the WebMCP tool registration code and the full demo app required to run it.
 - Public repository: https://github.com/taoj007/slip2form
 - Live site: https://slip2form.vercel.app/
+- Demo video: https://youtu.be/Le5opnVVnOI
 
 ## Project story
 

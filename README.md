@@ -82,6 +82,7 @@ Use the WebMCP tools on this page to fill the Slip2Form intake with values that 
 - This is a new project created for The WebMCP Challenge.
 - The project is intended to stay public and unchanged after the submission deadline through the end of judging.
 - The repository contains the WebMCP tool registration code and the full demo app required to run it.
+- Public repository: https://github.com/taoj007/slip2form
 
 ## Project story
 

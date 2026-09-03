@@ -1,0 +1,35 @@
+{
+  "name": "slip2form",
+  "version": "0.1.0",
+  "private": true,
+  "author": "Tao Jiang",
+  "description": "WebMCP-enabled tax intake prototype where a user's AI fills a live form through structured tools.",
+  "keywords": [
+    "webmcp",
+    "nextjs",
+    "react",
+    "typescript",
+    "demo",
+    "tax-intake"
+  ],
+  "license": "MIT",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "latest",
+    "react": "latest",
+    "react-dom": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "autoprefixer": "latest",
+    "postcss": "latest",
+    "tailwindcss": "^3.4.17",
+    "typescript": "latest"
+  }
+}

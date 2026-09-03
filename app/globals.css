@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color: #17201a;
+  background: #f6f3eb;
+}
+
+body {
+  min-height: 100vh;
+  margin: 0;
+  background:
+    linear-gradient(135deg, rgba(83, 129, 102, 0.16), transparent 42%),
+    #f6f3eb;
+}
